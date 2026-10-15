@@ -12,6 +12,8 @@ from edgar.exceptions import TransportError, http_status
 from edgar.httprequests import download_json
 from edgar.storage import get_edgar_data_directory, is_using_local_storage
 
+import os
+
 __all__ = [
     'get_entity_submissions',
     'download_entity_submissions_from_sec',
@@ -79,6 +81,8 @@ def load_company_submissions_from_local(cik: int) -> Optional[Dict[str, Any]]:
 
     # If file doesn't exist, download it
     if not submissions_file.exists():
+        os.environ["EDGAR_OFFLINE"] = "True"
+
         submissions_json = download_entity_submissions_from_sec(cik)
         if submissions_json:
             with open(submissions_file, "w", encoding='utf-8') as f:
@@ -129,6 +133,8 @@ def download_entity_submissions_from_sec(cik: int) -> Optional[Dict[str, Any]]:
     """
     try:
         from edgar.urls import build_submissions_url
+        if os.environ["EDGAR_OFFLINE"] == "True":
+            return None
         submission_json = download_json(build_submissions_url(cik))
     except (httpx2.HTTPStatusError, TransportError) as e:
         # Handle the case where the cik is invalid and not found on Edgar.

@@ -516,6 +516,8 @@ def find_company_cik(ticker):
         return cik
 
     # Fallback: try live SEC data for tickers missing from bundled parquet
+    if os.environ["EDGAR_OFFLINE"] == "True":
+        return None
     live_lookup = _get_live_company_cik_lookup()
     if live_lookup is not None:
         return live_lookup.get(ticker)
